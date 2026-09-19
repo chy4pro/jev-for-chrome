@@ -1,3 +1,5 @@
+<p align="center"><img src="assets/logo.png" width="96" alt="Jev for Chrome"></p>
+
 # Jev for Chrome
 
 [![check](https://github.com/chy4pro/jev-for-chrome/actions/workflows/check.yml/badge.svg)](https://github.com/chy4pro/jev-for-chrome/actions/workflows/check.yml)

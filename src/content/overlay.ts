@@ -1,5 +1,6 @@
 import { PageAction } from '../shared/types';
 import { getCache } from './snapshot';
+import icon from '../../public/icon16.png?inline';
 
 let overlayContainer: HTMLElement | null = null;
 let statusBanner: HTMLElement | null = null;
@@ -110,8 +111,15 @@ export function showStatusBanner(text: string, latencyMs?: number): void {
 
   const label = document.createElement('span');
   label.style.cssText = 'overflow:hidden; text-overflow:ellipsis;';
+  const logo = document.createElement('img');
+  logo.src = icon;
+  logo.width = 14;
+  logo.height = 14;
+  logo.alt = '';
+  logo.style.cssText = 'display:inline-block; vertical-align:-2px; margin-right:6px; border-radius:3px;';
+  label.appendChild(logo);
   const strong = document.createElement('strong');
-  strong.textContent = '⚡ Jev Agent';
+  strong.textContent = 'Jev';
   label.appendChild(strong);
   label.appendChild(document.createTextNode(`: ${text}`));
   statusBanner.appendChild(label);

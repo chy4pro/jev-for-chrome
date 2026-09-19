@@ -135,7 +135,7 @@ export const Popup: React.FC = () => {
       {/* Header */}
       <div style={styles.header}>
         <div style={styles.headerLeft}>
-          <span style={styles.boltIcon}>⚡</span>
+          <img src="icon48.png" width={28} height={28} alt="" style={{ display: 'block', borderRadius: 6 }} />
           <div>
             <div style={styles.title}>Jev for Chrome</div>
             <div style={styles.subtitle}>Unofficial Jev browser agent</div>

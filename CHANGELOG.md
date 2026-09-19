@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.4.3 — 2026-09-19
+- Logo applied everywhere: icons re-rendered from assets/icon.svg with pixel-bound centring and even padding (toolbar sizes on a dark tile), popup and options headers, the in-page status bar, README, and the store promo tile.
+
 ## 1.4.2 — 2026-09-19
 - New icon (assets/icon.svg, rendered by scripts/render-icons.mjs at 16/32/48/128) and a 440×280 promo tile for the store listing.
 

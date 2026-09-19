@@ -103,7 +103,10 @@ export const Options: React.FC = () => {
     <div style={styles.container}>
       <div style={styles.card}>
         <div style={styles.header}>
-          <h1 style={styles.title}>⚡ Jev for Chrome settings</h1>
+          <h1 style={{ ...styles.title, display: 'flex', alignItems: 'center', gap: 10 }}>
+            <img src="icon48.png" width={28} height={28} alt="" style={{ borderRadius: 6 }} />
+            Jev for Chrome settings
+          </h1>
           <p style={styles.subtitle}>
             Configure your Jev model provider (TypeSafe.ai, OpenRouter, Cloudflare) and Text Helper.
           </p>
