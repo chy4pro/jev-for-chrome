@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.4.4 — 2026-09-19
+- Popup: the main button is "Run".
+
 ## 1.4.3 — 2026-09-19
 - Logo applied everywhere: icons re-rendered from assets/icon.svg with pixel-bound centring and even padding (toolbar sizes on a dark tile), popup and options headers, the in-page status bar, README, and the store promo tile.
 

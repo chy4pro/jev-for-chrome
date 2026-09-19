@@ -149,7 +149,7 @@ async function runTask(context: BrowserContext, sw: Worker, extId: string, task:
     await popup.goto(`chrome-extension://${extId}/popup.html?tabId=${tabId}`);
     await popup.getByText('Jev for Chrome').first().waitFor({ timeout: 10000 });
     await popup.locator('textarea').fill(task.goal);
-    await popup.getByRole('button', { name: /Run Ultrafast/ }).click();
+    await popup.getByRole('button', { name: /^▶ Run$/ }).click();
     await page.bringToFront();
     log.add(`[${task.name}] goal: ${task.goal}`);
 

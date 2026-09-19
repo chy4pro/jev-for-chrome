@@ -189,7 +189,7 @@ export const Popup: React.FC = () => {
               disabled={!goal.trim()}
               onClick={handleStart}
             >
-              ▶ Run Ultrafast
+              ▶ Run
             </button>
             <button
               style={{ ...styles.btn, ...styles.btnSecondary }}
