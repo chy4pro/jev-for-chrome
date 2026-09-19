@@ -26,7 +26,11 @@ Not affiliated with TypeSafe or Browser Use.
 
 **Screenshots** (1280×800): `docs/store/1-typing.png`, `docs/store/2-results.png`, `docs/store/3-options.png`
 
-**Small promo tile** (440×280, optional but fills the listing): `docs/store/promo-440x280.png` 
+**Small promo tile** (440×280, required): `docs/store/promo-440x280.png`
+
+**Marquee promo tile** (1400×560, optional): `docs/store/promo-1400x560.png`
+
+Both follow the store's image guidance: no text, saturated colour, artwork fills the region and still reads at half size. The store icon is the 128 px file inside the package: 96 px artwork with 16 px transparent padding, facing the viewer, no perspective. 
 
 **Privacy policy URL**: https://github.com/chy4pro/jev-for-chrome/blob/main/docs/PRIVACY.md
 

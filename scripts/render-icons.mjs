@@ -54,16 +54,15 @@ for (const [file, dataUrl] of Object.entries(renders.out)) {
 }
 console.log('emblem bounds in 1024 probe:', JSON.stringify(renders.bounds));
 
-// Promo tile uses the centred logo.
+// Promotional images follow the store guidance: no text, saturated colour, the artwork fills
+// the region and still reads at half size. Small tile (required) and marquee (optional).
 const logo = fs.readFileSync('assets/logo.png').toString('base64');
-await page.setViewportSize({ width: 440, height: 280 });
-await page.setContent(`<html><body style="margin:0;width:440px;height:280px;background:${TILE};display:flex;align-items:center;justify-content:center;gap:28px;font-family:'Liberation Sans',Arial,Helvetica,sans-serif;color:#f8fafc">
-  <img src="data:image/png;base64,${logo}" width="120" height="120" style="display:block">
-  <div>
-    <div style="font-size:34px;font-weight:700;letter-spacing:-0.5px">Jev for Chrome</div>
-    <div style="font-size:16px;color:#c7d2fe;margin-top:8px;line-height:1.35">Sub-second browser agent.<br>Runs in your own tabs.</div>
-  </div>
-</body></html>`);
-await page.screenshot({ path: 'docs/store/promo-440x280.png', clip: { x: 0, y: 0, width: 440, height: 280 } });
-console.log('docs/store/promo-440x280.png');
+for (const [file, w, h, size] of [['docs/store/promo-440x280.png', 440, 280, 220], ['docs/store/promo-1400x560.png', 1400, 560, 440]]) {
+  await page.setViewportSize({ width: w, height: h });
+  await page.setContent(`<html><body style="margin:0;width:${w}px;height:${h}px;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 45%, #2d4fb8 0%, #1e3a8a 55%, #172554 100%)">
+    <img src="data:image/png;base64,${logo}" width="${size}" height="${size}" style="display:block;filter:drop-shadow(0 6px 18px rgba(0,0,0,0.35))">
+  </body></html>`);
+  await page.screenshot({ path: file, clip: { x: 0, y: 0, width: w, height: h } });
+  console.log(file);
+}
 await browser.close();
