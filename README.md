@@ -1,10 +1,12 @@
 <p align="center"><img src="assets/logo.png" width="96" alt="Jev for Chrome"></p>
 
-# Jev for Chrome
+<h1 align="center">Jev for Chrome</h1>
 
+<p align="center">
 [![check](https://github.com/chy4pro/jev-for-chrome/actions/workflows/check.yml/badge.svg)](https://github.com/chy4pro/jev-for-chrome/actions/workflows/check.yml)
 [![release](https://img.shields.io/github/v/release/chy4pro/jev-for-chrome?display_name=tag)](https://github.com/chy4pro/jev-for-chrome/releases)
 [![license](https://img.shields.io/github/license/chy4pro/jev-for-chrome)](LICENSE)
+</p>
 
 A Chrome extension that drives the tab you are looking at with [TypeSafe Jev](https://typesafe.ai), a decision model that picks the next click, keystroke or dropdown value in a few hundred milliseconds instead of generating text. It is a Manifest V3 port of [browser-use/jev-ultrafast](https://github.com/browser-use/jev-ultrafast): same observation format, same questions, same execution rules. Community project, not affiliated with TypeSafe or Browser Use.
 

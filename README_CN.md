@@ -1,10 +1,12 @@
 <p align="center"><img src="assets/logo.png" width="96" alt="Jev for Chrome"></p>
 
-# Jev for Chrome
+<h1 align="center">Jev for Chrome</h1>
 
+<p align="center">
 [![check](https://github.com/chy4pro/jev-for-chrome/actions/workflows/check.yml/badge.svg)](https://github.com/chy4pro/jev-for-chrome/actions/workflows/check.yml)
 [![release](https://img.shields.io/github/v/release/chy4pro/jev-for-chrome?display_name=tag)](https://github.com/chy4pro/jev-for-chrome/releases)
 [![license](https://img.shields.io/github/license/chy4pro/jev-for-chrome)](LICENSE)
+</p>
 
 一个直接驱动你当前标签页的 Chrome 扩展，决策模型是 [TypeSafe Jev](https://typesafe.ai)：它不生成文本，几百毫秒内直接选出下一步该点哪、该在哪输入、该选哪个下拉项。本项目是 [browser-use/jev-ultrafast](https://github.com/browser-use/jev-ultrafast) 的 Manifest V3 移植：同样的观察格式、同样的问题、同样的执行规则。社区项目，与 TypeSafe 和 Browser Use 均无隶属关系。
 
