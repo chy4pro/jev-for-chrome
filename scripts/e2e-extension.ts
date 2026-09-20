@@ -42,8 +42,7 @@ interface Result {
   trace: string[];
 }
 
-/** The test build grants "debugger" up front: optional permissions need a prompt nobody can answer headless. */
-const DIST = path.resolve(process.env.E2E_DIST || (fs.existsSync('dist-test/manifest.json') ? 'dist-test' : 'dist'));
+const DIST = path.resolve(process.env.E2E_DIST || 'dist');
 const FIXTURES = path.resolve('scripts/e2e-fixtures');
 
 /** Serves scripts/e2e-fixtures over loopback for deterministic pages (fixture://name.html). */

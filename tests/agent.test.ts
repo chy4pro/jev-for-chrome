@@ -588,7 +588,7 @@ describe('trusted input (chrome.debugger)', () => {
       }),
       onDetach: { addListener: vi.fn() },
     };
-    vi.stubGlobal('chrome', { ...chromeMock, permissions: { contains: vi.fn(async () => true) }, debugger: debuggerMock });
+    vi.stubGlobal('chrome', { ...chromeMock, debugger: debuggerMock });
     return { chromeMock, debuggerMock, commands };
   }
 
@@ -664,15 +664,16 @@ describe('trusted input (chrome.debugger)', () => {
     expect(r.getProgress().status).toBe('done');
   });
 
-  it('uses the in-page path and says why when the permission is missing', async () => {
+  it('uses the in-page path and says why when the debugger refuses to attach', async () => {
     const page: Page = { snapshot: snapshot(), act: () => ({ ok: true, via: 'synthetic' }), sent: [] };
-    const { chromeMock } = installDebugger(page);
-    vi.stubGlobal('chrome', { ...chromeMock, permissions: { contains: vi.fn(async () => false) } });
+    const { chromeMock, debuggerMock } = installDebugger(page);
+    debuggerMock.attach.mockRejectedValue(new Error('Another debugger is already attached to the tab with id: 7.'));
+    vi.stubGlobal('chrome', { ...chromeMock, debugger: debuggerMock });
     jev.mockResolvedValueOnce(answer('CLICK', clickTarget('1'))).mockResolvedValueOnce(answer('DONE'));
     const r = runner();
     await r.start('Search', 7);
 
     expect(page.sent.filter((m) => m.type === 'CONTENT_ACT')).toHaveLength(1);
-    expect(r.getProgress().inputNote).toMatch(/permission was not granted/);
+    expect(r.getProgress().inputNote).toMatch(/Could not attach/);
   });
 });

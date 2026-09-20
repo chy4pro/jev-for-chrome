@@ -670,9 +670,9 @@ export class AgentRunner {
     } else if (await this.input.attach(tabId)) {
       delete this.progress.inputNote;
     } else {
-      this.progress.inputNote = (await TrustedInput.permitted())
+      this.progress.inputNote = TrustedInput.available()
         ? 'Could not attach the debugger (DevTools open on this tab?); using synthetic events.'
-        : 'The debugger permission was not granted; using synthetic events.';
+        : 'The debugger API is unavailable in this browser; using synthetic events.';
     }
     this.broadcastUpdate();
   }

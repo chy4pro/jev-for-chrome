@@ -6,7 +6,6 @@ import {
   DEFAULT_SETTINGS,
   ExtensionMessage,
 } from '../shared/types';
-import { ensureTrustedInputPermission } from '../shared/permissions';
 
 const STATUS_COLORS: Record<string, string> = {
   running: '#10b981',
@@ -67,16 +66,12 @@ export const Popup: React.FC = () => {
 
   const handleStart = () => {
     if (!goal.trim()) return;
-    void ensureTrustedInputPermission(settings.trustedInput).then(() =>
-      chrome.runtime.sendMessage({ type: 'START_AGENT', goal: goal.trim(), tabId: targetTabId() })
-    );
+    chrome.runtime.sendMessage({ type: 'START_AGENT', goal: goal.trim(), tabId: targetTabId() });
   };
 
   const handleStep = () => {
     if (!goal.trim()) return;
-    void ensureTrustedInputPermission(settings.trustedInput).then(() =>
-      chrome.runtime.sendMessage({ type: 'STEP_AGENT', goal: goal.trim(), tabId: targetTabId() })
-    );
+    chrome.runtime.sendMessage({ type: 'STEP_AGENT', goal: goal.trim(), tabId: targetTabId() });
   };
 
   const handleStop = () => {

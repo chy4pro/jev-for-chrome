@@ -4,7 +4,7 @@ What is planned, roughly in order. Nothing here is promised; items move when the
 
 ## Now
 
-- Chrome Web Store: 1.5.0 submitted with the optional `debugger` permission (trusted input). Once listed, the store link goes into the README and the awesome-list entries.
+- Chrome Web Store: 1.5.1 submitted with the `debugger` permission (trusted input). Once listed, the store link goes into the README and the awesome-list entries.
 - Re-run the 17-task suite on 1.5.0 and update the results table. The last recorded run was 13/17 on 1.4.x with synthetic events; trusted input should help the sites that ignore scripted clicks.
 - If the store rejects `<all_urls>`: switch to `optional_host_permissions`, ask for the current site when a run starts, and pause on a cross-site navigation until the user grants the new site from the popup.
 

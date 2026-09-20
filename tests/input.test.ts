@@ -1,12 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { TrustedInput } from '../src/background/input';
 
-function installChrome(opts: { permitted?: boolean; attachError?: string } = {}) {
+function installChrome(opts: { absent?: boolean; attachError?: string } = {}) {
   const commands: Array<{ method: string; params: any }> = [];
   let onDetach: ((source: any, reason: string) => void) | null = null;
-  const chromeMock = {
-    permissions: { contains: vi.fn(async () => opts.permitted !== false) },
-    debugger: {
+  const debuggerMock = {
       attach: vi.fn(async () => {
         if (opts.attachError) throw new Error(opts.attachError);
       }),
@@ -16,9 +14,9 @@ function installChrome(opts: { permitted?: boolean; attachError?: string } = {})
         return {};
       }),
       onDetach: { addListener: vi.fn((fn: any) => { onDetach = fn; }) },
-    },
   };
-  vi.stubGlobal('chrome', chromeMock);
+  const chromeMock = { debugger: debuggerMock };
+  vi.stubGlobal('chrome', opts.absent ? {} : chromeMock);
   return { chromeMock, commands, fireDetach: (source: any, reason: string) => onDetach?.(source, reason) };
 }
 
@@ -53,8 +51,8 @@ describe('TrustedInput', () => {
     expect(commands[2].params).toMatchObject({ type: 'keyUp', key: 'Enter' });
   });
 
-  it('reports false without the permission or when Chrome refuses to attach', async () => {
-    installChrome({ permitted: false });
+  it('reports false without the API or when Chrome refuses to attach', async () => {
+    installChrome({ absent: true });
     expect(await new TrustedInput().attach(7)).toBe(false);
     installChrome({ attachError: 'Another debugger is already attached to the tab with id: 7.' });
     const input = new TrustedInput();

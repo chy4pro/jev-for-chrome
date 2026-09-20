@@ -4,9 +4,9 @@
  * links and framework handlers that ignore scripted events all work, and the page's own CSP
  * is what applies. This is how nanobrowser, Taxy and browser-use drive pages.
  *
- * Attaching is best effort. It fails when the optional "debugger" permission was declined,
- * when DevTools already owns the tab, or on pages extensions cannot touch; the caller then
- * falls back to synthetic events. Chrome shows an info bar on the tab while attached and
+ * Attaching is best effort. It fails when DevTools already owns the tab, when another
+ * extension is attached, or on pages extensions cannot touch; the caller then falls back to
+ * synthetic events. ("debugger" cannot be an optional permission in Chrome, so it is required.) Chrome shows an info bar on the tab while attached and
  * detaches when the user dismisses it; that ends the run.
  */
 export class TrustedInput {
@@ -19,20 +19,15 @@ export class TrustedInput {
     return this.tabId;
   }
 
-  /** True when the debugger permission is granted (the API namespace only exists once it is). */
-  public static async permitted(): Promise<boolean> {
-    try {
-      if (typeof chrome === 'undefined' || !chrome.permissions?.contains) return false;
-      return await chrome.permissions.contains({ permissions: ['debugger'] });
-    } catch {
-      return false;
-    }
+  /** True when the debugger API exists in this context (unit tests and some builds lack it). */
+  public static available(): boolean {
+    return typeof chrome !== 'undefined' && typeof chrome.debugger !== 'undefined';
   }
 
   /** Attaches to the tab, moving from a previous one. Returns false when attaching is impossible. */
   public async attach(tabId: number): Promise<boolean> {
     if (this.tabId === tabId) return true;
-    if (!(await TrustedInput.permitted()) || typeof chrome.debugger === 'undefined') return false;
+    if (!TrustedInput.available()) return false;
     await this.detach();
     try {
       await chrome.debugger.attach({ tabId }, '1.3');

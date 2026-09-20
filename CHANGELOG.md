@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.5.1 — 2026-09-20
+- `debugger` is a required permission: Chrome does not allow it as an optional one (the store dropped it with a warning). The Options switch still decides whether trusted input is used; off, synthetic DOM events are used. Updating from 1.4.x re-asks for permissions once.
+
 ## 1.5.0 — 2026-09-20
 - Trusted input: clicks, typing and Enter go through the DevTools protocol (optional `debugger` permission, on by default, switchable in Options). Pages receive real user input: javascript: links, hover menus and handlers that check `isTrusted` work without special cases. Chrome shows its "started debugging" bar during a run; dismissing it stops the run.
 - One execution pipeline: the page checks freshness, scrolls the target into view, waits for it to stop moving and checks for cover, then input is dispatched (trusted, or synthetic when the permission is missing or DevTools owns the tab). Post-action waiting is a DOM-quiet window instead of fixed delays.

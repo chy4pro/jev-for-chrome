@@ -9,9 +9,8 @@
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "check": "npm run typecheck && npm test && npm run build",
-    "build:test": "npm run build && node scripts/test-build.mjs",
-    "e2e:ext": "npm run build:test && tsx scripts/e2e-extension.ts",
-    "e2e:input": "npm run build:test && tsx scripts/e2e-input.ts",
+    "e2e:ext": "npm run build && tsx scripts/e2e-extension.ts",
+    "e2e:input": "npm run build && tsx scripts/e2e-input.ts",
     "icons": "node scripts/render-icons.mjs"
   },
   "keywords": [

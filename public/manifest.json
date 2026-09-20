@@ -1,13 +1,14 @@
 {
   "manifest_version": 3,
   "name": "Jev for Chrome",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "description": "Drives the current tab with TypeSafe Jev, a sub-second decision model. Unofficial community port of jev-ultrafast.",
   "permissions": [
     "storage",
     "activeTab",
     "scripting",
-    "tabs"
+    "tabs",
+    "debugger"
   ],
   "host_permissions": [
     "<all_urls>"
@@ -42,8 +43,5 @@
       ],
       "run_at": "document_end"
     }
-  ],
-  "optional_permissions": [
-    "debugger"
   ]
 }

@@ -25,7 +25,7 @@ The providers you configure process the data described above under their own ter
 
 - `activeTab`, `tabs`, `scripting` and the `<all_urls>` host permission: needed to read the tab you started a run on, to inject the page script that executes clicks and typing, and to follow a link that opens a new tab. They are not used on other tabs.
 - `storage`: to keep your settings and keys on your device.
-- `debugger` (optional): to send the clicks and keystrokes of a run to that tab through Chrome's DevTools protocol, so the page receives real user input. It is attached only while a run is active on that tab and detached when the run ends. Nothing is read through it. Chrome shows a "started debugging" bar on the tab while it is attached; you can decline the permission or turn it off in Options.
+- `debugger`: to send the clicks and keystrokes of a run to that tab through Chrome's DevTools protocol, so the page receives real user input. It is attached only while a run is active on that tab and detached when the run ends. Nothing is read through it. Chrome shows a "started debugging" bar on the tab while it is attached; you can turn the feature off in Options (Chrome does not allow this permission to be optional).
 
 ## Contact
 

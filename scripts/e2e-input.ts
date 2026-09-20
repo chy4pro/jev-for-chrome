@@ -1,7 +1,7 @@
 /**
- * Mechanics check for trusted input, no model needed: loads the test build headless, attaches
+ * Mechanics check for trusted input, no model needed: loads dist/ headless, attaches
  * chrome.debugger from the service worker and drives the exact prepare → dispatch → settle path
- * the agent uses. Run: npm run build:test && tsx scripts/e2e-input.ts
+ * the agent uses. Run: npm run e2e:input
  */
 import fs from 'node:fs';
 import http from 'node:http';
@@ -9,7 +9,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { chromium } from 'playwright';
 
-const DIST = path.resolve(process.env.E2E_DIST || 'dist-test');
+const DIST = path.resolve(process.env.E2E_DIST || 'dist');
 const FIXTURES = path.resolve('scripts/e2e-fixtures');
 
 async function serveFixtures(): Promise<{ url: string; close: () => void }> {
