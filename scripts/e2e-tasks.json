@@ -125,7 +125,7 @@
     "url": "fixture://new-tab.html",
     "goal": "Open the documentation page",
     "maxSteps": 4,
-    "expectUrl": "docs\\\\.html",
+    "expectUrl": "docs\\.html",
     "expectText": "Getting started"
   },
   {

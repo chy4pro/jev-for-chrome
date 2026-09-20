@@ -185,6 +185,7 @@ async function runTask(context: BrowserContext, sw: Worker, extId: string, task:
       const urlOk = task.expectUrl ? new RegExp(task.expectUrl, 'i').test(finalUrl) : true;
       const textOk = task.expectText ? new RegExp(task.expectText, 'i').test(text) : true;
       verified = urlOk && textOk;
+      log.add(`[${task.name}] verify: url ${urlOk ? 'ok' : 'MISS'} (${finalUrl}); text ${textOk ? 'ok' : 'MISS'} (${text.length} chars on ${finalPage === page ? 'start tab' : 'followed tab'}: ${JSON.stringify(text.slice(0, 80))})`);
     }
     await finalPage.screenshot({ path: path.join(dir, 'final-page.png') }).catch(() => undefined);
     await popup.screenshot({ path: path.join(dir, 'final-popup.png') }).catch(() => undefined);
