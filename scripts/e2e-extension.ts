@@ -42,7 +42,8 @@ interface Result {
   trace: string[];
 }
 
-const DIST = path.resolve('dist');
+/** The test build grants "debugger" up front: optional permissions need a prompt nobody can answer headless. */
+const DIST = path.resolve(process.env.E2E_DIST || (fs.existsSync('dist-test/manifest.json') ? 'dist-test' : 'dist'));
 const FIXTURES = path.resolve('scripts/e2e-fixtures');
 
 /** Serves scripts/e2e-fixtures over loopback for deterministic pages (fixture://name.html). */
@@ -101,7 +102,7 @@ async function launch(log: Log): Promise<{ context: BrowserContext; sw: Worker; 
     viewport: { width: 1280, height: 800 },
     locale: process.env.E2E_LOCALE || 'en-US',
     ...(process.env.E2E_VIDEO === '1' ? { recordVideo: { dir: path.join(OUT, 'video'), size: { width: 1280, height: 800 } } } : {}),
-    args: [`--disable-extensions-except=${DIST}`, `--load-extension=${DIST}`, '--no-sandbox', '--disable-gpu'],
+    args: [`--disable-extensions-except=${DIST}`, `--load-extension=${DIST}`, '--no-sandbox', '--disable-gpu', '--silent-debugger-extension-api'],
   });
   let [sw] = context.serviceWorkers();
   if (!sw) sw = await context.waitForEvent('serviceworker', { timeout: 15000 });

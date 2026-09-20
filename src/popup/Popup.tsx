@@ -6,6 +6,7 @@ import {
   DEFAULT_SETTINGS,
   ExtensionMessage,
 } from '../shared/types';
+import { ensureTrustedInputPermission } from '../shared/permissions';
 
 const STATUS_COLORS: Record<string, string> = {
   running: '#10b981',
@@ -66,12 +67,16 @@ export const Popup: React.FC = () => {
 
   const handleStart = () => {
     if (!goal.trim()) return;
-    chrome.runtime.sendMessage({ type: 'START_AGENT', goal: goal.trim(), tabId: targetTabId() });
+    void ensureTrustedInputPermission(settings.trustedInput).then(() =>
+      chrome.runtime.sendMessage({ type: 'START_AGENT', goal: goal.trim(), tabId: targetTabId() })
+    );
   };
 
   const handleStep = () => {
     if (!goal.trim()) return;
-    chrome.runtime.sendMessage({ type: 'STEP_AGENT', goal: goal.trim(), tabId: targetTabId() });
+    void ensureTrustedInputPermission(settings.trustedInput).then(() =>
+      chrome.runtime.sendMessage({ type: 'STEP_AGENT', goal: goal.trim(), tabId: targetTabId() })
+    );
   };
 
   const handleStop = () => {
@@ -244,6 +249,9 @@ export const Popup: React.FC = () => {
 
         {progress.lastError && (
           <div style={styles.errorBanner}>{progress.lastError}</div>
+        )}
+        {progress.inputNote && (
+          <div style={styles.noteBanner}>{progress.inputNote}</div>
         )}
       </div>
 
@@ -460,6 +468,15 @@ const styles: Record<string, any> = {
   stepCounter: {
     fontSize: 11,
     color: '#94a3b8',
+  },
+  noteBanner: {
+    marginTop: 8,
+    padding: 6,
+    backgroundColor: 'rgba(245, 158, 11, 0.15)',
+    border: '1px solid #b45309',
+    borderRadius: 4,
+    color: '#fcd34d',
+    fontSize: 11,
   },
   errorBanner: {
     marginTop: 8,

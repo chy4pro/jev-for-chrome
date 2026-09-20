@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { executeAction } from '../src/content/executor';
+import { executeAction, prepareAction } from '../src/content/executor';
 import { takeSnapshot } from '../src/content/snapshot';
 import { PageAction } from '../src/shared/types';
 
@@ -77,7 +77,7 @@ describe('executeAction', () => {
     const snapshot = takeSnapshot()!;
     const res = await executeAction(actionFor(snapshot.actions, (a) => a.label === 'Agree'));
 
-    expect(res).toEqual({ success: true });
+    expect(res).toEqual({ ok: true, via: 'synthetic' });
     expect(clicks).toBe(1);
     expect(checkbox.checked).toBe(true);
   });
@@ -93,7 +93,7 @@ describe('executeAction', () => {
     const snapshot = takeSnapshot()!;
     const res = await executeAction(actionFor(snapshot.actions, (a) => a.kind === 'fill'), 'Alice');
 
-    expect(res).toEqual({ success: true });
+    expect(res).toEqual({ ok: true, via: 'synthetic' });
     expect(first.value).toBe('Alice');
     expect(events).toEqual(['input', 'change']);
   });
@@ -108,8 +108,8 @@ describe('executeAction', () => {
     (document.getElementById('q') as HTMLInputElement).value = 'changed by the page';
 
     const res = await executeAction(actionFor(snapshot.actions, (a) => a.label === 'Search'));
-    expect(res.success).toBe(false);
-    expect(res.stale).toBe(true);
+    expect(res.ok).toBe(false);
+    expect((res as any).code).toBe('stale');
     expect(clicks).toBe(0);
   });
 
@@ -123,7 +123,7 @@ describe('executeAction', () => {
     (document as any).elementFromPoint = () => document.getElementById('modal');
 
     const res = await executeAction(actionFor(snapshot.actions, (a) => a.label === 'Buy'));
-    expect(res.stale).toBe(true);
+    expect((res as any).code).toBe('covered');
     expect(clicks).toBe(0);
   });
 
@@ -136,7 +136,7 @@ describe('executeAction', () => {
 
     const snapshot = takeSnapshot()!;
     const action = actionFor(snapshot.actions, (a) => a.kind === 'select' && a.value === 'ow');
-    expect(await executeAction(action)).toEqual({ success: true });
+    expect(await executeAction(action)).toEqual({ ok: true, via: 'page' });
     expect(select.value).toBe('ow');
     expect(changes).toBe(1);
 
@@ -144,7 +144,7 @@ describe('executeAction', () => {
     const rt = actionFor(again.actions, (a) => a.kind === 'select' && a.value === 'rt');
     select.remove();
     const res = await executeAction({ ...rt });
-    expect(res.success).toBe(false);
+    expect(res.ok).toBe(false);
   });
 
   it('clicks the innermost element under the pointer so a link inside an option row navigates', async () => {
@@ -159,14 +159,14 @@ describe('executeAction', () => {
     (document as any).elementFromPoint = () => link;
     const res = await executeAction(actionFor(snapshot.actions, (a) => a.role === 'option'));
 
-    expect(res).toEqual({ success: true });
+    expect(res).toEqual({ ok: true, via: 'synthetic' });
     expect(clicked).toEqual(['link', 'row:link']);
   });
 
   it('runs wait and scroll controls', async () => {
     document.body.innerHTML = '<p>Hello</p>';
     const snapshot = takeSnapshot()!;
-    expect(await executeAction(actionFor(snapshot.actions, (a) => a.id === 'wait'))).toEqual({ success: true });
+    expect(await executeAction(actionFor(snapshot.actions, (a) => a.id === 'wait'))).toEqual({ ok: true, via: 'page' });
   });
 });
 
@@ -184,7 +184,7 @@ describe('click targets and PRESS_ENTER', () => {
     const snapshot = takeSnapshot()!;
     (document as any).elementFromPoint = () => document.querySelector('#icon path');
     const res = await executeAction(actionFor(snapshot.actions, (a) => a.role === 'button'));
-    expect(res).toEqual({ success: true });
+    expect(res).toEqual({ ok: true, via: 'synthetic' });
     expect(clicks).toBe(1);
   });
 
@@ -209,7 +209,7 @@ describe('click targets and PRESS_ENTER', () => {
     }
     const keys: string[] = [];
     q.addEventListener('keydown', (e) => keys.push(e.key));
-    expect(await executeAction(press!)).toEqual({ success: true });
+    expect(await executeAction(press!)).toEqual({ ok: true, via: 'synthetic' });
     expect(keys).toEqual(['Enter']);
     expect(submitted).toEqual(['mine']);
   });
@@ -244,7 +244,7 @@ describe('covers inside one component', () => {
     const snapshot = takeSnapshot()!;
     (document as any).elementFromPoint = () => document.getElementById('hover');
     const res = await executeAction(actionFor(snapshot.actions, (a) => a.label.startsWith('Apple')));
-    expect(res).toEqual({ success: true });
+    expect(res).toEqual({ ok: true, via: 'synthetic' });
     expect(clicks).toBe(1);
   });
 
@@ -257,7 +257,7 @@ describe('covers inside one component', () => {
     const snapshot = takeSnapshot()!;
     (document as any).elementFromPoint = () => document.getElementById('modal');
     const res = await executeAction(actionFor(snapshot.actions, (a) => a.label === 'Buy'));
-    expect(res.stale).toBe(true);
+    expect((res as any).code).toBe('covered');
     expect(clicks).toBe(0);
   });
 });
@@ -301,7 +301,7 @@ describe('wrapped inline links', () => {
     link.addEventListener('click', (e) => { clicks++; e.preventDefault(); });
     const snapshot = takeSnapshot()!;
     const res = await executeAction(actionFor(snapshot.actions, (a) => a.label.startsWith('Apple')));
-    expect(res).toEqual({ success: true });
+    expect(res).toEqual({ ok: true, via: 'synthetic' });
     expect(clicks).toBe(1);
   });
 });
@@ -352,7 +352,7 @@ describe('javascript: links', () => {
     link.addEventListener('click', () => localClicks++);
     const snapshot = takeSnapshot()!;
     const res = await executeAction(actionFor(snapshot.actions, (a) => a.label === 'Show more'));
-    expect(res).toEqual({ success: true });
+    expect(res).toEqual({ ok: true, via: 'synthetic' });
     expect(messages).toEqual([{ type: 'MAIN_WORLD_CLICK', token: tokenSeen }]);
     expect(tokenSeen).toBeTruthy();
     expect(link.hasAttribute('data-jev-click')).toBe(false);
@@ -366,5 +366,45 @@ describe('javascript: links', () => {
     expect(plainClicks).toBe(1);
     expect(messages).toHaveLength(1);
     vi.unstubAllGlobals();
+  });
+});
+
+describe('prepareAction', () => {
+  beforeEach(() => {
+    delete (window as any).__jevFast;
+    fakeLayout();
+  });
+
+  it('returns the click point for a button, and clears and focuses a field before typing', async () => {
+    document.body.innerHTML = '<form><input id="q" aria-label="Search" value="old"><button id="go">Go</button></form>';
+    const snapshot = takeSnapshot()!;
+    const button = await prepareAction(actionFor(snapshot.actions, (a) => a.label === 'Go'));
+    expect(button).toEqual({ ok: true, done: false, x: 110, y: expect.any(Number) });
+
+    const field = document.getElementById('q') as HTMLInputElement;
+    const fill = await prepareAction(actionFor(snapshot.actions, (a) => a.kind === 'fill'), 'new');
+    expect(fill).toMatchObject({ ok: true, done: false });
+    expect(field.value).toBe(''); // cleared, so inserted text does not append
+    expect(document.activeElement).toBe(field);
+  });
+
+  it('assigns number-like values directly instead of asking for keystrokes', async () => {
+    document.body.innerHTML = '<label>Guests <input id="d" type="number"></label>';
+    const snapshot = takeSnapshot()!;
+    const res = await prepareAction(actionFor(snapshot.actions, (a) => a.kind === 'fill' && a.label === 'Guests'), '3');
+    expect(res).toEqual({ ok: true, done: true });
+    expect((document.getElementById('d') as HTMLInputElement).value).toBe('3');
+  });
+
+  it('reports a covered target with a code, without touching the page', async () => {
+    document.body.innerHTML = '<button id="b">Buy</button><div id="modal" role="dialog">Modal</div>';
+    let clicks = 0;
+    document.getElementById('b')!.addEventListener('click', () => clicks++);
+    const snapshot = takeSnapshot()!;
+    // The modal opens after the observation, before the action runs.
+    (document as any).elementFromPoint = () => document.getElementById('modal');
+    const res = await prepareAction(actionFor(snapshot.actions, (a) => a.label === 'Buy'));
+    expect(res).toMatchObject({ ok: false, code: 'covered' });
+    expect(clicks).toBe(0);
   });
 });

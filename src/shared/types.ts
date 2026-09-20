@@ -47,6 +47,13 @@ export interface AppSettings {
   maxSteps: number;
   stepDelayMs: number;
   showOverlay: boolean;
+  /**
+   * Dispatch clicks and keystrokes through the DevTools protocol (chrome.debugger) so pages
+   * receive trusted input, as a person's mouse and keyboard would produce. Needs the optional
+   * "debugger" permission; without it, or when DevTools already owns the tab, the content
+   * script's synthetic events are used instead.
+   */
+  trustedInput: boolean;
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -75,6 +82,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   maxSteps: 30,
   stepDelayMs: 300,
   showOverlay: true,
+  trustedInput: true,
 };
 
 /**
@@ -266,12 +274,28 @@ export interface PageSnapshot {
   omitted_actions: number;
 }
 
-/** Result of executing one action inside the page. `stale` means nothing was executed. */
-export interface ActResult {
-  success: boolean;
-  stale?: boolean;
-  error?: string;
-}
+/**
+ * Why an action could not run. Everything except `invalid` means the page is not (yet) in
+ * the state the decision assumed, so the caller observes again instead of giving up.
+ */
+export type ActFailure =
+  | 'stale' // the page changed since the snapshot
+  | 'missing' // the target left the DOM
+  | 'disabled' // disabled, hidden, read-only
+  | 'offscreen' // no usable rect even after scrolling it into view
+  | 'covered' // something else sits at the click point
+  | 'failed' // the browser refused the input (attach lost, dispatch threw)
+  | 'invalid'; // a programming error: unknown action, wrong element type
+
+export type ActResult =
+  | { ok: true; via: 'cdp' | 'synthetic' | 'page' }
+  | { ok: false; code: ActFailure; message: string };
+
+/** What the content script returns before the background dispatches trusted input. */
+export type PrepareResult =
+  | { ok: true; done: true } // the action was completed inside the page (scroll, wait, select, direct value)
+  | { ok: true; done: false; x: number; y: number }
+  | { ok: false; code: ActFailure; message: string };
 
 export type AgentStatus = 'idle' | 'running' | 'paused' | 'done' | 'blocked' | 'error';
 
@@ -299,6 +323,8 @@ export interface AgentProgress {
   maxSteps: number;
   logs: AgentStepLog[];
   lastError?: string;
+  /** How input reaches the page this run, when it is not the trusted path. */
+  inputNote?: string;
 }
 
 // Messages between Extension components
@@ -313,8 +339,15 @@ export type ExtensionMessage =
   | { type: 'PROGRESS_UPDATE'; progress: AgentProgress }
   | { type: 'PING' }
   | { type: 'CONTENT_OBSERVE' }
+  /** Whole action inside the page with synthetic events (fallback when trusted input is off). */
   | { type: 'CONTENT_ACT'; action: PageAction; text?: string }
-  | { type: 'CONTENT_STATUS'; text?: string; latencyMs?: number; clear?: boolean }
-  /** Content script → background: click an element in the page's main world (javascript: links). */
+  /** Checks, scrolls and focuses the target; returns the point for the background's trusted input. */
+  | { type: 'CONTENT_PREPARE'; action: PageAction; text?: string }
+  /** Synthetic dispatch on an already prepared target (trusted input failed mid-way). */
+  | { type: 'CONTENT_DISPATCH'; action: PageAction; text?: string }
+  /** Waits for the page to go quiet after trusted input. */
+  | { type: 'CONTENT_SETTLE' }
+  /** Content script → background: click a javascript: link in the page's main world (synthetic path only). */
   | { type: 'MAIN_WORLD_CLICK'; token: string }
+  | { type: 'CONTENT_STATUS'; text?: string; latencyMs?: number; clear?: boolean }
   | { type: 'TOGGLE_OVERLAY'; show: boolean; tabId?: number };

@@ -9,3 +9,4 @@ _ref_jev_ultrafast
 *.key
 credentials.json
 .e2e-out
+dist-test

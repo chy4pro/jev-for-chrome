@@ -1,5 +1,5 @@
 import { ActResult, ExtensionMessage } from '../shared/types';
-import { executeAction } from './executor';
+import { dispatchSynthetic, executeAction, prepareAction, settle } from './executor';
 import {
   clearBadges,
   highlightTarget,
@@ -7,7 +7,9 @@ import {
   renderElementBadges,
   showStatusBanner,
 } from './overlay';
-import { takeSnapshot } from './snapshot';
+import { clickRect, getCache, takeSnapshot } from './snapshot';
+
+const failed = (err: any): ActResult => ({ ok: false, code: 'failed', message: err?.message || String(err) });
 
 /**
  * The manifest injects this script at document_idle and the background may inject it
@@ -68,14 +70,31 @@ function boot(): void {
           return false;
         }
 
-        case 'CONTENT_ACT': {
+        case 'CONTENT_ACT':
+        case 'CONTENT_PREPARE': {
           if (showOverlay) highlightTarget(message.action);
           // Badges describe the previous observation; drop them before the page changes.
           clearBadges();
-          executeAction(message.action, message.text)
-            .then((res: ActResult) => sendResponse(res))
-            .catch((err) => sendResponse({ success: false, error: err?.message || String(err) }));
+          const run = message.type === 'CONTENT_ACT' ? executeAction : prepareAction;
+          run(message.action, message.text)
+            .then((res) => sendResponse(res))
+            .catch((err) => sendResponse(failed(err)));
           return true; // async sendResponse
+        }
+
+        case 'CONTENT_DISPATCH': {
+          const el = getCache().nodes.get(message.action.node ?? -1);
+          const r = el ? clickRect(el) : null;
+          const point = r ? { x: r.x + r.width / 2, y: r.y + r.height / 2 } : { x: 0, y: 0 };
+          dispatchSynthetic(message.action, point, message.text)
+            .then((res: ActResult) => sendResponse(res))
+            .catch((err) => sendResponse(failed(err)));
+          return true;
+        }
+
+        case 'CONTENT_SETTLE': {
+          settle().then(() => sendResponse({ ok: true }));
+          return true;
         }
 
         case 'CONTENT_STATUS': {

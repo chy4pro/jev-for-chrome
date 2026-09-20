@@ -9,6 +9,7 @@ import {
   TEXT_HELPER_PRESETS,
   TextHelperProvider,
 } from '../shared/types';
+import { ensureTrustedInputPermission, releaseTrustedInputPermission } from '../shared/permissions';
 
 /** A minimal, valid decision request used by the connection test. */
 const TEST_REQUEST: Omit<JevRequest, 'model'> = {
@@ -430,6 +431,23 @@ export const Options: React.FC = () => {
                 }
               />
               Show [1], [2] element badges overlay on webpage during execution
+            </label>
+          </div>
+
+          <div style={styles.checkboxField}>
+            <label style={styles.checkboxLabel}>
+              <input
+                type="checkbox"
+                checked={settings.trustedInput}
+                onChange={(e) => {
+                  const on = e.target.checked;
+                  setSettings({ ...settings, trustedInput: on });
+                  if (on) void ensureTrustedInputPermission(true);
+                  else void releaseTrustedInputPermission();
+                }}
+              />
+              Trusted input (recommended): send clicks and keystrokes through Chrome's debugger so pages
+              treat them as real user input. Chrome shows a "started debugging" bar on the tab while a run is active.
             </label>
           </div>
         </div>

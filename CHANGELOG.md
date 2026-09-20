@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.5.0 — 2026-09-20
+- Trusted input: clicks, typing and Enter go through the DevTools protocol (optional `debugger` permission, on by default, switchable in Options). Pages receive real user input: javascript: links, hover menus and handlers that check `isTrusted` work without special cases. Chrome shows its "started debugging" bar during a run; dismissing it stops the run.
+- One execution pipeline: the page checks freshness, scrolls the target into view, waits for it to stop moving and checks for cover, then input is dispatched (trusted, or synthetic when the permission is missing or DevTools owns the tab). Post-action waiting is a DOM-quiet window instead of fixed delays.
+- Action results carry a code (`stale`, `missing`, `disabled`, `offscreen`, `covered`, `failed`, `invalid`) so the loop decides by kind, not by message text. Number fields are set directly.
+- `npm run e2e:input`: model-free check of the trusted-input path on fixture pages; `npm run build:test` makes the headless build with the permission granted up front.
+
 ## 1.4.5 — 2026-09-20
 - javascript: links are clicked in the page's main world (via the background), because a click from the extension's isolated world is checked against the extension's CSP and blocked. Fixture and suite task added.
 

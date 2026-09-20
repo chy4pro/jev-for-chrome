@@ -10,8 +10,10 @@ import {
   DEFAULT_SETTINGS,
   PageAction,
   PageSnapshot,
+  PrepareResult,
   RecentAction,
 } from '../shared/types';
+import { TrustedInput } from './input';
 
 /** Semantic fingerprint of an observation: URL, scroll, visible text and the element table. */
 export function computePageFingerprint(snapshot: PageSnapshot): string {
@@ -100,8 +102,16 @@ export class AgentRunner {
   private tabStack: number[] = [];
   private pendingTab: { from: number; to: number; closed: boolean } | null = null;
   private tabNote: string | null = null;
+  /** Trusted input via chrome.debugger; attached per run when the setting is on and permitted. */
+  private input = new TrustedInput();
 
   constructor() {
+    this.input.onCancelled = () => {
+      if (this.progress.status !== 'running') return;
+      this.stop();
+      this.progress.lastError = 'Stopped: debugging was cancelled from the browser bar.';
+      this.broadcastUpdate();
+    };
     // A click may open a new tab (target=_blank, window.open). Like a person, the agent
     // follows it; when that tab closes it returns to the tab that opened it.
     try {
@@ -136,6 +146,7 @@ export class AgentRunner {
     this.tabNote = pending.closed ? 'the tab closed; back on the previous tab' : 'opened a new tab and switched to it';
     await chrome.tabs.update(pending.to, { active: true }).catch(() => undefined);
     await this.waitForTabToLoad(pending.to);
+    await this.attachInput(pending.to);
     this.sendStatus({ text: this.tabNote });
   }
   private startUrl = '';
@@ -196,6 +207,7 @@ export class AgentRunner {
     if (this.progress.status === 'running') return;
     this.reset(goal, tabId);
     this.broadcastUpdate();
+    await this.attachInput(tabId);
     await this.loop(this.runToken);
   }
 
@@ -217,15 +229,18 @@ export class AgentRunner {
     }
 
     this.broadcastUpdate();
+    await this.attachInput(tabId);
     const cont = await this.executeOneStep(token);
     if (token === this.runToken && this.progress.status === 'running') {
       this.progress.status = cont ? 'paused' : 'idle';
     }
+    if (this.progress.status !== 'running') void this.input.detach();
     this.broadcastUpdate();
   }
 
   public stop(): void {
     this.runToken++;
+    void this.input.detach();
     if (this.progress.status === 'running' || this.progress.status === 'paused') {
       this.progress.status = 'idle';
     }
@@ -552,29 +567,26 @@ export class AgentRunner {
     this.sendStatus({ text: `${operation} ${targetAction.label}`.slice(0, 120), latencyMs });
     let navigated = false;
     try {
-      const actResponse: ActResult | undefined = await chrome.tabs.sendMessage(tabId, {
-        type: 'CONTENT_ACT',
-        action: targetAction,
-        text: generatedText,
-      });
-      if (actResponse?.stale) {
+      const result = await this.act(tabId, targetAction, generatedText);
+      if (!result.ok) {
+        if (result.code === 'invalid') {
+          this.finish('error', `Act execution failed: ${result.message}`);
+          return false;
+        }
         this.consecutiveStale++;
         if (this.consecutiveStale >= MAX_CONSECUTIVE_STALE) {
-          this.finish('error', `Page kept changing before actions could run: ${actResponse.error || 'stale'}`);
+          this.finish('error', `Page kept changing before actions could run: ${result.message}`);
           return false;
         }
         // A covered or vanished target counts as a miss: the model is told, and after two
         // misses the target is withheld while alternatives exist.
         this.targetFailureCount.set(targetAction.id, (this.targetFailureCount.get(targetAction.id) || 0) + 1);
-        this.lastStaleNotice = `ATTENTION: The target "${targetAction.label}" could not be acted on (${actResponse.error || 'page changed'}). If an overlay or dialog is open, act inside it or close it; otherwise choose a different target.`;
+        this.lastStaleNotice = `ATTENTION: The target "${targetAction.label}" could not be acted on (${result.message}). If an overlay or dialog is open, act inside it or close it; otherwise choose a different target.`;
         this.broadcastUpdate();
         // A covered or vanished target usually means the page is still loading or animating
         // (an in-page sort or filter that swaps the list); give it more time before looking again.
         await new Promise((r) => setTimeout(r, 500 * this.consecutiveStale));
         return true; // observe again; nothing was executed
-      }
-      if (!actResponse?.success) {
-        throw new Error(actResponse?.error || 'Content action returned failure');
       }
     } catch (err: any) {
       const message = err?.message || String(err);
@@ -651,7 +663,57 @@ export class AgentRunner {
     if (this.progress.logs.length > 50) this.progress.logs.pop();
   }
 
+  /** Attaches trusted input when enabled; records why not so the trace shows which path ran. */
+  private async attachInput(tabId: number): Promise<void> {
+    if (!this.settings.trustedInput) {
+      this.progress.inputNote = 'Trusted input is off in settings; using synthetic events.';
+    } else if (await this.input.attach(tabId)) {
+      delete this.progress.inputNote;
+    } else {
+      this.progress.inputNote = (await TrustedInput.permitted())
+        ? 'Could not attach the debugger (DevTools open on this tab?); using synthetic events.'
+        : 'The debugger permission was not granted; using synthetic events.';
+    }
+    this.broadcastUpdate();
+  }
+
+  /**
+   * One action: the page checks, scrolls and focuses the target, then the input is dispatched
+   * through the DevTools protocol when attached, or with synthetic events otherwise. A
+   * trusted dispatch that throws falls back to synthetic on the already prepared target.
+   */
+  private async act(tabId: number, action: PageAction, text?: string): Promise<ActResult> {
+    if (this.input.attachedTab !== tabId) {
+      const result: ActResult | undefined = await chrome.tabs.sendMessage(tabId, { type: 'CONTENT_ACT', action, text });
+      return result ?? { ok: false, code: 'failed', message: 'No reply from the page.' };
+    }
+    const prep: PrepareResult | undefined = await chrome.tabs.sendMessage(tabId, { type: 'CONTENT_PREPARE', action, text });
+    if (!prep) return { ok: false, code: 'failed', message: 'No reply from the page.' };
+    if (!prep.ok) return prep;
+    if (prep.done) return { ok: true, via: 'page' };
+    try {
+      if (action.kind === 'click') {
+        await this.input.click(prep.x, prep.y);
+      } else if (action.kind === 'fill') {
+        await this.input.click(prep.x, prep.y);
+        await this.input.insertText(text ?? '');
+      } else if (action.kind === 'key') {
+        await this.input.pressEnter();
+      } else {
+        return { ok: false, code: 'invalid', message: `Unknown action kind: ${String(action.kind)}` };
+      }
+    } catch (err: any) {
+      // The session was lost mid-action (tab navigated away, user cancelled): synthetic events
+      // on the target the page already prepared are the closest equivalent.
+      const fallback: ActResult | undefined = await chrome.tabs.sendMessage(tabId, { type: 'CONTENT_DISPATCH', action, text });
+      return fallback ?? { ok: false, code: 'failed', message: err?.message || String(err) };
+    }
+    await chrome.tabs.sendMessage(tabId, { type: 'CONTENT_SETTLE' }).catch(() => undefined);
+    return { ok: true, via: 'cdp' };
+  }
+
   private finish(status: 'done' | 'blocked' | 'error', message?: string): void {
+    void this.input.detach();
     this.progress.status = status;
     if (message) {
       this.progress.lastError = message;
