@@ -127,5 +127,12 @@
     "maxSteps": 4,
     "expectUrl": "docs\\\\.html",
     "expectText": "Getting started"
+  },
+  {
+    "name": "Fixture: javascript: link reveals content",
+    "url": "fixture://js-link.html",
+    "goal": "Show the tracking details for this order",
+    "maxSteps": 4,
+    "expectText": "Tracking number: AC123456789"
   }
 ]

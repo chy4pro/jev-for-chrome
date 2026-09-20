@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.4.5 — 2026-09-20
+- javascript: links are clicked in the page's main world (via the background), because a click from the extension's isolated world is checked against the extension's CSP and blocked. Fixture and suite task added.
+
 ## 1.4.4 — 2026-09-19
 - Popup: the main button is "Run".
 

@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { executeAction } from '../src/content/executor';
 import { takeSnapshot } from '../src/content/snapshot';
 import { PageAction } from '../src/shared/types';
@@ -328,5 +328,43 @@ describe('covered elements are not observed', () => {
     expect(labels).not.toContain('Apple Cinema 30"');
     expect(labels).toContain('Canon EOS');
     expect(labels).toContain('HP LP3065');
+  });
+});
+
+describe('javascript: links', () => {
+  beforeEach(() => {
+    delete (window as any).__jevFast;
+    fakeLayout();
+  });
+
+  it('asks the background to click a javascript: link in the main world instead of clicking it here', async () => {
+    document.body.innerHTML = '<a id="js" href="javascript:void(0)">Show more</a><a id="plain" href="#x">Plain</a>';
+    const link = document.getElementById('js')!;
+    const messages: any[] = [];
+    let tokenSeen: string | null = null;
+    vi.stubGlobal('chrome', {
+      runtime: {
+        id: 'ext',
+        sendMessage: vi.fn(async (m: any) => { messages.push(m); tokenSeen = link.getAttribute('data-jev-click'); return { success: true }; }),
+      },
+    });
+    let localClicks = 0;
+    link.addEventListener('click', () => localClicks++);
+    const snapshot = takeSnapshot()!;
+    const res = await executeAction(actionFor(snapshot.actions, (a) => a.label === 'Show more'));
+    expect(res).toEqual({ success: true });
+    expect(messages).toEqual([{ type: 'MAIN_WORLD_CLICK', token: tokenSeen }]);
+    expect(tokenSeen).toBeTruthy();
+    expect(link.hasAttribute('data-jev-click')).toBe(false);
+    expect(localClicks).toBe(0); // the click happened in the main world, not here
+
+    // A plain link is still clicked locally.
+    const plain = document.getElementById('plain')!;
+    let plainClicks = 0;
+    plain.addEventListener('click', (e) => { plainClicks++; e.preventDefault(); });
+    await executeAction(actionFor(takeSnapshot()!.actions, (a) => a.label === 'Plain'));
+    expect(plainClicks).toBe(1);
+    expect(messages).toHaveLength(1);
+    vi.unstubAllGlobals();
   });
 });

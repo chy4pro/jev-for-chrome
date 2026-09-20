@@ -79,6 +79,27 @@ chrome.runtime.onMessage.addListener(
             sendResponse({ success: true });
             return;
           }
+          case 'MAIN_WORLD_CLICK': {
+            // A javascript: link clicked from the extension's isolated world is checked against
+            // the extension's CSP and blocked. Clicking it from the page's own world runs it
+            // under the page's CSP, exactly like a user's click.
+            const tabId = _sender.tab?.id;
+            if (tabId === undefined) throw new Error('MAIN_WORLD_CLICK needs a tab');
+            const [result] = await chrome.scripting.executeScript({
+              target: { tabId, frameIds: _sender.frameId !== undefined ? [_sender.frameId] : undefined },
+              world: 'MAIN',
+              func: (token: string) => {
+                const el = document.querySelector(`[data-jev-click="${token}"]`) as HTMLElement | null;
+                if (!el) return false;
+                el.removeAttribute('data-jev-click');
+                el.click();
+                return true;
+              },
+              args: [message.token],
+            });
+            sendResponse({ success: result?.result === true });
+            return;
+          }
           case 'TOGGLE_OVERLAY': {
             const settings = await getStoredSettings();
             await saveStoredSettings({ ...settings, showOverlay: message.show });

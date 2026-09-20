@@ -315,4 +315,6 @@ export type ExtensionMessage =
   | { type: 'CONTENT_OBSERVE' }
   | { type: 'CONTENT_ACT'; action: PageAction; text?: string }
   | { type: 'CONTENT_STATUS'; text?: string; latencyMs?: number; clear?: boolean }
+  /** Content script → background: click an element in the page's main world (javascript: links). */
+  | { type: 'MAIN_WORLD_CLICK'; token: string }
   | { type: 'TOGGLE_OVERLAY'; show: boolean; tabId?: number };

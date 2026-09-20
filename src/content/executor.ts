@@ -71,6 +71,25 @@ function describeElement(e: Element): string {
   return `${e.tagName.toLowerCase()}${e.id ? '#' + e.id : ''}${cls.length ? '.' + cls.join('.') : ''}`;
 }
 
+function isJavascriptLink(el: Element): boolean {
+  const link = el.closest('a[href]');
+  return !!link && /^\s*javascript:/i.test(link.getAttribute('href') || '');
+}
+
+/** Marks the element and asks the background to click it in the page's main world. */
+async function clickInMainWorld(el: Element): Promise<boolean> {
+  const token = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
+  el.setAttribute('data-jev-click', token);
+  try {
+    const res = await chrome.runtime.sendMessage({ type: 'MAIN_WORLD_CLICK', token });
+    return res?.success === true;
+  } catch {
+    return false;
+  } finally {
+    el.removeAttribute('data-jev-click');
+  }
+}
+
 function clickableAt(element: HTMLElement, hit: Element | null): HTMLElement {
   let node: Element | null = hit;
   while (node && node !== element && element.contains(node)) {
@@ -211,7 +230,12 @@ export async function executeAction(action: PageAction, text?: string): Promise<
       dispatchPointerSequence(clickTarget, x, y);
       element.focus();
       // One click only. click() runs the activation behavior (toggle, navigate, submit).
-      clickTarget.click();
+      if (isJavascriptLink(clickTarget)) {
+        // The extension's CSP blocks javascript: URLs run from this world; ask the page's world.
+        if (!(await clickInMainWorld(clickTarget))) clickTarget.click();
+      } else {
+        clickTarget.click();
+      }
       await settleAfter(action);
       return { success: true };
     }
