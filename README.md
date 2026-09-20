@@ -135,6 +135,10 @@ Not handled: elements inside shadow roots or iframes, canvas UIs, file uploads, 
 
 Same policy and same boundaries as the reference implementation; two websites do not prove general reliability.
 
+## Roadmap
+
+What comes next, including an MCP server so other agents can use Jev as their executor, is in [ROADMAP.md](ROADMAP.md).
+
 ## Development
 
 ```bash

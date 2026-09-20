@@ -135,6 +135,10 @@ npm run build
 
 策略和边界与参考实现一致；在两个网站上跑通不代表普遍可靠。
 
+## 路线图
+
+接下来的计划(包括做一个 MCP server,让别的 agent 把 Jev 当执行器用)在 [ROADMAP.md](ROADMAP.md)。
+
 ## 开发
 
 ```bash
