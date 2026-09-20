@@ -137,7 +137,7 @@ Same policy and same boundaries as the reference implementation; two websites do
 
 ## Built on jev-dev-kit
 
-The Jev providers, the strict answer validation and the text helper come from [jev-dev-kit](https://github.com/chy4pro/jev-dev-kit), a small framework extracted from this extension: Jev only chooses, candidates and text come through explicit providers, and the loop machinery is shared. This extension keeps the browser-specific parts: the element table, the rules, trusted input and tab handling.
+The strict answer validation, the request and answer types and the text helper's reply contract come from [jev-dev-kit](https://github.com/chy4pro/jev-dev-kit), a small framework extracted from this extension: Jev only chooses, candidates and text come through explicit providers, and the loop machinery is shared. This extension keeps the browser-specific parts: the element table, the rules, trusted input and tab handling.
 
 ## Roadmap
 

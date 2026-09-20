@@ -1,8 +1,10 @@
-import { chatText, parseFieldText, TextContext } from 'jev-dev-kit';
+import { parseFieldText } from 'jev-dev-kit';
 import { TEXT_VALUE_PROMPT } from './prompts';
-import { AppSettings, PageAction, RecentAction, TEXT_HELPER_PRESETS } from './types';
 
 export { parseFieldText };
+import { OPENROUTER_HEADERS } from './providers/openrouter';
+import { postJson } from './providers/http';
+import { AppSettings, PageAction, RecentAction, TEXT_HELPER_PRESETS } from './types';
 
 export interface FieldContext {
   goal: string;
@@ -89,6 +91,31 @@ export async function generateFieldText(
     throw new Error(`TYPE_TEXT cannot run: ${status.message} No text is guessed by the executor.`);
   }
 
-  const write = chatText({ baseUrl, apiKey, model, systemPrompt: TEXT_VALUE_PROMPT, referer: 'https://github.com/chy4pro/jev-for-chrome', title: 'Jev for Chrome' });
-  return write(context as unknown as TextContext);
+  const isOpenRouter = baseUrl.includes('openrouter.ai');
+  const isDeepSeek = baseUrl.includes('api.deepseek.com');
+
+  const payload: Record<string, any> = {
+    model,
+    max_tokens: 1024,
+    response_format: { type: 'json_object' },
+    messages: [
+      { role: 'system', content: TEXT_VALUE_PROMPT },
+      { role: 'user', content: JSON.stringify(context) },
+    ],
+    ...(isDeepSeek ? { thinking: { type: 'disabled' } } : {}),
+  };
+
+  const json = await postJson(
+    `${baseUrl}/chat/completions`,
+    { Authorization: `Bearer ${apiKey}`, ...(isOpenRouter ? OPENROUTER_HEADERS : {}) },
+    payload,
+    { label: 'Text helper' }
+  );
+
+  const rawContent = json?.choices?.[0]?.message?.content;
+  if (typeof rawContent !== 'string' || !rawContent.trim()) {
+    throw new Error('Text helper returned an empty message; nothing typed.');
+  }
+
+  return parseFieldText(rawContent);
 }

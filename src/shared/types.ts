@@ -90,8 +90,11 @@ export const DEFAULT_SETTINGS: AppSettings = {
  * rejects today. They are rewritten on load so an old install keeps working after an update.
  * OpenRouter has no `typesafe/jev-latest`; that alias only exists on the TypeSafe API.
  */
-export { OBSOLETE_OPENROUTER_JEV_MODELS } from 'jev-dev-kit';
-import { OBSOLETE_OPENROUTER_JEV_MODELS } from 'jev-dev-kit';
+export const OBSOLETE_OPENROUTER_JEV_MODELS: Record<string, string> = {
+  'typesafe/jev-latest': 'typesafe/jev-1.13',
+  'typesafe/jev': 'typesafe/jev-1.13',
+  'typesafe/jev-1.13-20260917': 'typesafe/jev-1.13',
+};
 
 /** Bare DeepSeek ids are only valid on api.deepseek.com; OpenRouter needs the vendor prefix. */
 export const OBSOLETE_OPENROUTER_TEXT_MODELS: Record<string, string> = {

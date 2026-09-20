@@ -137,7 +137,7 @@ npm run build
 
 ## 基于 jev-dev-kit
 
-Jev 渠道、严格的答案校验和文本助手来自 [jev-dev-kit](https://github.com/chy4pro/jev-dev-kit),一个从本扩展抽出来的小框架:Jev 只做选择,候选和文本通过明确的 provider 提供,循环机制共用。扩展自己保留浏览器相关的部分:元素表、规则、可信输入和标签页处理。
+严格的答案校验、请求和回答的类型、文本助手的返回格式约定来自 [jev-dev-kit](https://github.com/chy4pro/jev-dev-kit),一个从本扩展抽出来的小框架:Jev 只做选择,候选和文本通过明确的 provider 提供,循环机制共用。扩展自己保留浏览器相关的部分:元素表、规则、可信输入和标签页处理。
 
 ## 路线图
 
