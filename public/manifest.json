@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Jev for Chrome",
-  "version": "1.5.1",
+  "version": "1.5.2",
   "description": "Drives the current tab with TypeSafe Jev, a sub-second decision model. Unofficial community port of jev-ultrafast.",
   "permissions": [
     "storage",
