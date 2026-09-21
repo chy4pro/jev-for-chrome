@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.5.2 — 2026-09-20
+- Answer validation, the Jev request/answer types and the text helper's reply-format parser come from [jev-dev-kit](https://github.com/chy4pro/jev-dev-kit) 0.2.0, the framework extracted from this extension. Providers and the HTTP code stay here; behaviour is unchanged.
+
 ## 1.5.1 — 2026-09-20
 - `debugger` is a required permission: Chrome does not allow it as an optional one (the store dropped it with a warning). The Options switch still decides whether trusted input is used; off, synthetic DOM events are used. Updating from 1.4.x re-asks for permissions once.
 

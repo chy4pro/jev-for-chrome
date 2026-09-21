@@ -135,6 +135,10 @@ Not handled: elements inside shadow roots or iframes, canvas UIs, file uploads, 
 
 Same policy and same boundaries as the reference implementation; two websites do not prove general reliability.
 
+## Built on jev-dev-kit
+
+The strict answer validation, the request and answer types and the text helper's reply contract come from [jev-dev-kit](https://github.com/chy4pro/jev-dev-kit), a small framework extracted from this extension: Jev only chooses, candidates and text come through explicit providers, and the loop machinery is shared. This extension keeps the browser-specific parts: the element table, the rules, trusted input and tab handling.
+
 ## Roadmap
 
 What comes next, including an MCP server so other agents can use Jev as their executor, is in [ROADMAP.md](ROADMAP.md).

@@ -135,6 +135,10 @@ npm run build
 
 策略和边界与参考实现一致；在两个网站上跑通不代表普遍可靠。
 
+## 基于 jev-dev-kit
+
+严格的答案校验、请求和回答的类型、文本助手的返回格式约定来自 [jev-dev-kit](https://github.com/chy4pro/jev-dev-kit),一个从本扩展抽出来的小框架:Jev 只做选择,候选和文本通过明确的 provider 提供,循环机制共用。扩展自己保留浏览器相关的部分:元素表、规则、可信输入和标签页处理。
+
 ## 路线图
 
 接下来的计划(包括做一个 MCP server,让别的 agent 把 Jev 当执行器用)在 [ROADMAP.md](ROADMAP.md)。

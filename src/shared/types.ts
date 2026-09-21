@@ -93,6 +93,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
 export const OBSOLETE_OPENROUTER_JEV_MODELS: Record<string, string> = {
   'typesafe/jev-latest': 'typesafe/jev-1.13',
   'typesafe/jev': 'typesafe/jev-1.13',
+  'typesafe/jev-1.13-20260917': 'typesafe/jev-1.13',
 };
 
 /** Bare DeepSeek ids are only valid on api.deepseek.com; OpenRouter needs the vendor prefix. */
@@ -132,29 +133,19 @@ export function mergeSettings(stored: Partial<AppSettings> | undefined | null): 
   return merged;
 }
 
-// Jev Question Primitives
-export interface ChoiceQuestion {
-  type: 'choice';
-  instructions: string | Record<string, any>;
-  criteria: Record<string, any>;
-}
-
-export interface NoulQuestion {
-  type: 'noul';
-  instructions: string | Record<string, any>;
-  criteria?: Record<string, string>;
-}
-
-export interface ScoreQuestion {
-  type: 'score';
-  instructions: string | Record<string, any>;
-  min?: number;
-  max?: number;
-  criteria?: string[] | Record<string, string>;
-}
-
-export type JevQuestion = ChoiceQuestion | NoulQuestion | ScoreQuestion;
-export type JevQuestions = Record<string, JevQuestion>;
+// Jev question and answer primitives come from jev-dev-kit; the state shape below is this app's.
+export type {
+  ChoiceQuestion,
+  NoulQuestion,
+  ScoreQuestion,
+  JevQuestion,
+  JevQuestions,
+  JevChoiceAnswer,
+  JevNoulAnswer,
+  JevScoreAnswer,
+  JevResponse,
+} from 'jev-dev-kit';
+import type { JevQuestions as KitQuestions } from 'jev-dev-kit';
 
 export interface ObservedElement {
   index: string;
@@ -190,7 +181,7 @@ export interface RunProgressState {
   visited_urls: string[];
 }
 
-export interface JevState {
+export interface JevState extends Record<string, unknown> {
   task: string;
   page: {
     url: string;
@@ -205,36 +196,9 @@ export interface JevState {
 export interface JevRequest {
   model: string;
   state: JevState;
-  questions: JevQuestions;
+  questions: KitQuestions;
 }
 
-export interface JevChoiceAnswer {
-  type?: 'choice';
-  choice: string;
-  confidence: number;
-  probabilities: Record<string, number>;
-}
-
-export interface JevNoulAnswer {
-  type?: 'noul';
-  probability: number;
-  noul?: number;
-}
-
-export interface JevScoreAnswer {
-  type?: 'score';
-  score: number;
-  confidence?: number;
-}
-
-export interface JevResponse {
-  model: string;
-  answers: Record<string, JevChoiceAnswer | JevNoulAnswer | JevScoreAnswer | any>;
-  usage?: {
-    input_tokens?: number;
-    output_tokens?: number;
-  };
-}
 
 // DOM Snapshot and Actions
 export interface ElementRect {

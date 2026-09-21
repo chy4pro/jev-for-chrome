@@ -1,4 +1,7 @@
+import { parseFieldText } from 'jev-dev-kit';
 import { TEXT_VALUE_PROMPT } from './prompts';
+
+export { parseFieldText };
 import { OPENROUTER_HEADERS } from './providers/openrouter';
 import { postJson } from './providers/http';
 import { AppSettings, PageAction, RecentAction, TEXT_HELPER_PRESETS } from './types';
@@ -38,7 +41,6 @@ export function createFieldContext(
   };
 }
 
-const MAX_TEXT_LENGTH = 2000;
 
 export interface HelperKeyStatus {
   provider: string;
@@ -116,27 +118,4 @@ export async function generateFieldText(
   }
 
   return parseFieldText(rawContent);
-}
-
-export function parseFieldText(rawContent: string): string {
-  // Tolerate ```json fences, but nothing else: the body must be the JSON object itself.
-  const cleaned = rawContent.replace(/```(?:json)?/gi, '').trim();
-
-  let parsed: any;
-  try {
-    parsed = JSON.parse(cleaned);
-  } catch {
-    throw new Error('Text helper did not return a JSON object; nothing typed.');
-  }
-  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed) || !('text' in parsed)) {
-    throw new Error('Text helper JSON is missing the "text" key; nothing typed.');
-  }
-  const value = parsed.text;
-  if (value === null) {
-    throw new Error('Text helper found no value for this field in the goal; nothing typed.');
-  }
-  if (typeof value !== 'string' || !value.trim() || value.length > MAX_TEXT_LENGTH) {
-    throw new Error('Text helper returned an invalid field value; nothing typed.');
-  }
-  return value;
 }
