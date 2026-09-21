@@ -1,5 +1,6 @@
 {
   "manifest_version": 3,
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA01G998anuOY0LzjSLMRixvlWfXLRpiXYdznL5kMRJq6A5F7qMteD4XFE3vLJNI0q1g1KmbzLWiwDnkB6xMXPk/jxeGETnTEEqfNM9m+p6Tc9be3U6IhlgBR8hyIfsBDBPZLsd8DwVL/tHSIUgVvUbROMs2fiLezQ3PxsAKt1gGzOKy0isHXpTbdFTnLNrI0MF48x0qVSNgK6mztMDVGn162agUVw8UbmMsfznOwNtd5zifa1AhZ+3w7SIbWD7MBC00nso1AnmZg/rw6Id/Svb4u1qSDPzyIzer8KKzrtVrVcbBLU52SGgAjAmDUNYOiQkQQeCDaiwM3+7QgaEpNu1wIDAQAB",
   "name": "Jev for Chrome",
   "version": "1.5.1",
   "description": "Drives the current tab with TypeSafe Jev, a sub-second decision model. Unofficial community port of jev-ultrafast.",
