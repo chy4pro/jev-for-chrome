@@ -21,6 +21,7 @@ import http from 'node:http';
 import os from 'node:os';
 import path from 'node:path';
 import { chromium, type BrowserContext, type Page, type Worker } from 'playwright';
+import type { JevProviderType, TextHelperProvider } from '../src/shared/types';
 
 interface Task {
   name: string;
@@ -65,6 +66,19 @@ const resolveTaskUrl = async (url: string) => (url.startsWith('fixture://') ? `$
 const OUT = path.resolve(process.env.E2E_OUT || '.e2e-out');
 const API_KEY = (process.env.OPENROUTER_API_KEY || '').trim();
 const DEFAULT_MAX_STEPS = Number(process.env.E2E_MAX_STEPS || 8);
+
+/** Jev decision provider + text-helper provider, configurable so the suite can run against
+ *  OpenRouter (default, unchanged) or another gateway (e.g. the Vercel AI Gateway) without code
+ *  changes — see AppSettings in src/shared/types.ts for the shape these land in. */
+const JEV_PROVIDER = (process.env.JEV_PROVIDER || 'openrouter') as JevProviderType;
+const JEV_ENDPOINT = process.env.JEV_ENDPOINT || '';
+const JEV_MODEL = process.env.JEV_MODEL || 'typesafe/jev-1.13';
+const JEV_API_KEY = (process.env.JEV_API_KEY || API_KEY || '').trim();
+
+const TEXT_PROVIDER = (process.env.TEXT_PROVIDER || 'openrouter') as TextHelperProvider;
+const TEXT_BASE_URL = process.env.TEXT_BASE_URL || '';
+const TEXT_MODEL = process.env.TEXT_MODEL || '';
+const TEXT_API_KEY = process.env.TEXT_API_KEY || '';
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
@@ -272,26 +286,44 @@ async function main() {
   let failed = false;
   try {
     await sw.evaluate(
-      async ({ apiKey }) => {
+      async ({ jevProvider, jevApiKey, jevModel, jevEndpoint, textProvider, textApiKey, textBaseUrl, textModel }) => {
+        const providerConfig =
+          jevProvider === 'cloudflare'
+            ? { accountId: '', apiToken: jevApiKey, model: jevModel, endpoint: jevEndpoint }
+            : { apiKey: jevApiKey, model: jevModel, endpoint: jevEndpoint };
         await chrome.storage.local.set({
           jev_settings: {
-            activeProvider: 'openrouter',
-            openrouter: { apiKey, model: 'typesafe/jev-1.13', endpoint: '' },
-            textHelper: { provider: 'openrouter', apiKey: '', baseUrl: '', model: '' },
+            activeProvider: jevProvider,
+            [jevProvider]: providerConfig,
+            textHelper: { provider: textProvider, apiKey: textApiKey, baseUrl: textBaseUrl, model: textModel },
             maxSteps: 8,
             stepDelayMs: 300,
             showOverlay: true,
           },
         });
       },
-      { apiKey: API_KEY }
+      {
+        jevProvider: JEV_PROVIDER,
+        jevApiKey: JEV_API_KEY,
+        jevModel: JEV_MODEL,
+        jevEndpoint: JEV_ENDPOINT,
+        textProvider: TEXT_PROVIDER,
+        textApiKey: TEXT_API_KEY,
+        textBaseUrl: TEXT_BASE_URL,
+        textModel: TEXT_MODEL,
+      }
     );
 
     const options = await context.newPage();
     attachPageLogging(options, log);
     await options.goto(`chrome-extension://${extId}/options.html`);
     await options.getByText('Jev for Chrome settings').waitFor({ timeout: 10000 });
-    log.add(`options page ok; model = "${await options.locator('input[placeholder="typesafe/jev-1.13"]').inputValue()}"`);
+    // The visible model field depends on the active provider tab (OpenRouter/TypeSafe/Cloudflare
+    // each render their own "Model" input); match by adjacent label instead of a fixed placeholder
+    // that only exists on the OpenRouter tab.
+    log.add(
+      `options page ok; provider = ${JEV_PROVIDER}; model = "${await options.locator('label:text-is("Model") + input').inputValue()}"`
+    );
     await options.screenshot({ path: path.join(OUT, 'options.png') });
     await options.close();
 
@@ -313,7 +345,7 @@ async function main() {
     fs.writeFileSync(path.join(OUT, 'summary.md'), md);
     console.log('\n' + md.split('\n').slice(0, results.length + 4).join('\n'));
 
-    if (!API_KEY) {
+    if (!JEV_API_KEY) {
       const r = results[0];
       const ok = r.status === 'error' && /API Key/i.test(r.error || '');
       log.add(ok ? 'smoke ok: missing key produced a clear error' : 'smoke FAILED: expected a clear missing-key error');
