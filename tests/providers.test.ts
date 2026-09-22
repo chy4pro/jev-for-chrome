@@ -235,6 +235,35 @@ describe('postJson retry policy', () => {
     ).rejects.toThrow(/HTTP 400.*bad request/);
     expect(global.fetch).toHaveBeenCalledTimes(1);
   });
+
+  it('retries a thrown fetch error with backoff and then succeeds', async () => {
+    (global.fetch as any)
+      .mockRejectedValueOnce(new TypeError('Failed to fetch'))
+      .mockRejectedValueOnce(new TypeError('Failed to fetch'))
+      .mockResolvedValueOnce({ ok: true, status: 200, json: async () => ({ model: 'm', answers: {} }) });
+
+    const pending = callTypeSafe(
+      { apiKey: 'k', model: 'jev-latest', endpoint: 'https://api.typesafe.ai/v1/systemone' },
+      dummyRequest
+    );
+    await vi.advanceTimersByTimeAsync(3000);
+    const res = await pending;
+    expect(res.model).toBe('m');
+    expect(global.fetch).toHaveBeenCalledTimes(3);
+  });
+
+  it('rejects after retries + 1 attempts when fetch always throws, keeping the original message', async () => {
+    (global.fetch as any).mockRejectedValue(new TypeError('Failed to fetch'));
+
+    const pending = callTypeSafe(
+      { apiKey: 'k', model: 'jev-latest', endpoint: 'https://api.typesafe.ai/v1/systemone' },
+      dummyRequest
+    );
+    const assertion = expect(pending).rejects.toThrow(/Failed to fetch/);
+    await vi.advanceTimersByTimeAsync(10000);
+    await assertion;
+    expect(global.fetch).toHaveBeenCalledTimes(4);
+  });
 });
 
 describe('OpenRouter unknown-model error', () => {

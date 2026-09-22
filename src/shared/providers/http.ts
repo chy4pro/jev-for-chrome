@@ -24,6 +24,14 @@ export async function postJson(
         body: JSON.stringify(body),
       });
     } catch (err: any) {
+      // fetch itself throwing (DNS failure, connection reset, "Failed to fetch" from a
+      // service worker) is retried the same as a transient status: model requests are
+      // idempotent, and the body sent above is a fresh JSON string per attempt, not a
+      // stream a prior attempt could have consumed, so resending it is safe.
+      if (attempt < retries) {
+        await sleep(800 * 2 ** attempt); // 0.8 s, 1.6 s, 3.2 s: same backoff as transient statuses
+        continue;
+      }
       throw new Error(`${label} connection failed (${err?.message || String(err)}); no action executed.`);
     }
 

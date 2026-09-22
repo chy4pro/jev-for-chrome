@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.5.3 — 2026-09-22
+- A model request whose `fetch` throws (DNS failure, connection reset, "Failed to fetch" in the service worker) is retried with the same backoff as a transient HTTP status, instead of failing the run on the first attempt. A live suite lost five tasks in a ten-second network window to this; model requests are idempotent, so resending is safe.
+- The E2E suite takes its provider, model, endpoint and text helper from the environment, so it can run against any gateway; OpenRouter stays the default. The options-page check no longer depends on the OpenRouter tab being active, and `tsx` is declared as a dev dependency.
+- [Runs through Vercel AI Gateway recorded](docs/e2e-suite-2026-09-22-vercel.md), including which models that gateway's free tier allows.
+
 ## 1.5.2 — 2026-09-20
 - Answer validation, the Jev request/answer types and the text helper's reply-format parser come from [jev-dev-kit](https://github.com/chy4pro/jev-dev-kit) 0.2.0, the framework extracted from this extension. Providers and the HTTP code stay here; behaviour is unchanged.
 
