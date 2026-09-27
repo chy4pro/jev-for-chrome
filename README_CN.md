@@ -84,7 +84,7 @@ Jev 返回的是候选项上的概率分布，弹窗里每一步都能看到模�
 
 暂未上架 Chrome 应用商店。
 
-**用发布包**：到 [Releases 页面](https://github.com/chy4pro/jev-for-chrome/releases)下载 `jev-for-chrome-<版本>.zip`，解压，打开 `chrome://extensions`，开启开发者模式，点 **加载已解压的扩展程序**，选择解压出来的目录。
+**用发布包**：到 [Releases 页面](https://github.com/chy4pro/jev-for-chrome/releases)下载名为 `jev-for-chrome-<版本>.zip` 的资产，解压，打开 `chrome://extensions`，开启开发者模式，点 **加载已解压的扩展程序**，选择解压出来的目录。不要下载 GitHub 自动生成的 **Source code（源码压缩包）**，它只是尚未构建的源码目录。Chrome 中选中的目录顶层必须直接包含 `manifest.json`。
 
 **从源码**：
 
